@@ -6,22 +6,27 @@ services:
       dockerfile: Dockerfile 
     ports:
       - "8080:8080"
-    volumes:
-      - ./backend:/app
+    # volumes:
+      # - ./backend:/app
     environment:
       - GIN_MODE=debug
-    # develop:
-    #   watch:
-    #     - action: sync
-    #       path: ./backend
-    #       target: /app
-    #       ignore:
-    #         - tmp/
-    #         - vendor/
-    #     - action: rebuild
-    #       path: ./backend/go.mod
-    #     - action: rebuild
-    #       path: ./backend/go.sum
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: sync
+          path: ./backend
+          target: /app
+          ignore:
+            - tmp/
+            - vendor/
+        - action: rebuild
+          path: ./backend/go.mod
+        - action: rebuild
+          path: ./backend/go.sum
 
   prod:
     build:
@@ -32,3 +37,31 @@ services:
       - "8080:8080"
     environment:
       - GIN_MODE=release
+
+  #this service name acts as the host name db connection
+  postgres:
+    image: postgres:17-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=urlshortener
+      - POSTGRES_USER=urldev
+      - POSTGRES_PASSWORD=urlpassword
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_PASSWORD="redispassword"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redispassword", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
