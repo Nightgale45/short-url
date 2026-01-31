@@ -32,13 +32,13 @@ func LoadConf() *Config {
 		Env: getEnv("ENVIRONMENT", "development"),
 		DatabaseConf: DatabaseConfig{
 			Url:      getEnv("DATABASE_URL", "localhost"),
-			MaxConns: 5,
-			MinConns: 1,
+			MaxConns: getEnvInt("DATABASE_MAX_CONN", 5),
+			MinConns: getEnvInt("DATABASE_MIN_CONN", 1),
 		},
 		RedisConf: RedisConfig{
 			Addr:     getEnv("REDIS_URL", "locahost:6379"),
 			Password: getEnv("REDIS_PASSWORD", ""),
-			DB:       0,
+			DB:       getEnvInt("REDIS_DB", 0),
 		},
 	}
 }

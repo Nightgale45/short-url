@@ -17,6 +17,8 @@ services:
     <<: *backend-base
     profiles: ["dev"] # this tell docker compose what services to build
     build:
+      context: ./backend/
+      dockerfile: Dockerfile
       target: development # this is targeting the backend dockerfile development
     environment:
       - GIN_MODE=debug
@@ -53,7 +55,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD", "pg_isready"]
+      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -66,7 +68,8 @@ services:
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-redispassword}
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      # test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a $${REDIS_PASSWORD} ping"]
       interval: 10s
       timeout: 5s
       retries: 5
