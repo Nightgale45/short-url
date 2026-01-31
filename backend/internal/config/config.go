@@ -1,8 +1,11 @@
 package config
 
 import (
-	"github.com/joho/godotenv"
 	"os"
+	"strconv"
+
+	"github.com/Nightgale45/short-url/internal/logger"
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -46,4 +49,24 @@ func getEnv(key string, defaultValue string) string {
 	}
 
 	return defaultValue
+}
+
+func getEnvInt(key string, defaultVal int) int {
+	envVal := os.Getenv(key)
+
+	val, err := strconv.Atoi(envVal)
+	if err != nil {
+		logger.GetInstance().Error("CONFIG: Cannot conver env vale to int",
+			"envKey", key)
+		panic(err)
+	}
+
+	if val == 0 {
+		logger.GetInstance().Warn("CONFIG: value is zero env key using default value",
+			"envKey", key,
+			"defaultVal", defaultVal)
+		return defaultVal
+	}
+
+	return val
 }
