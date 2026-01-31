@@ -2,15 +2,17 @@
 
 BACKEND_DIR = ./backend/
 
+DOCKER_COMPOSE = docker compose --env-file $(BACKEND_DIR).env 
+
 
 dev:
-	docker compose --env-file $(BACKEND_DIR).env --profile dev up --watch
+	$(DOCKER_COMPOSE) --profile dev up --watch
 
 down:
-	docker compose down
+	$(DOCKER_COMPOSE) down
 
 prod:
-	docker compose --env-file $(BACKEND_DIR).env --profile prod
+	$(DOCKER_COMPOSE) --profile prod
 
 # multi-line will not work since each line runs in a separate shell
 # to write multi-line either use && or \
