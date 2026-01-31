@@ -1,20 +1,25 @@
+# this is a yaml anchor where multiple service can reference the same base
+# the "x-" is a convertion for extension fields which is ignored by docker 
+x-backend-base: &backend-base
+  build:
+    context: ./backend/
+    dockerfile: Dockerfile
+  ports:
+    - "8080:8080"
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
 services:
   dev:
+    <<: *backend-base
+    profiles: ["dev"] # this tell docker compose what services to build
     build:
-      context: ./backend/
-      target: development
-      dockerfile: Dockerfile 
-    ports:
-      - "8080:8080"
-    # volumes:
-      # - ./backend:/app
+      target: development # this is targeting the backend dockerfile development
     environment:
       - GIN_MODE=debug
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     develop:
       watch:
         - action: sync
@@ -29,17 +34,16 @@ services:
           path: ./backend/go.sum
 
   prod:
+    <<: *backend-base
+    profiles: ["prod"]
     build:
-      context: ./backend/
-      dockerfile: Dockerfile 
       target: production
-    ports:
-      - "8080:8080"
     environment:
       - GIN_MODE=release
 
   #this service name acts as the host name db connection
   postgres:
+    profiles: ["dev", "prod"]
     image: postgres:17-alpine
     restart: always
     environment:
@@ -55,13 +59,14 @@ services:
       retries: 5
 
   redis:
+    profiles: ["dev", "prod"]
     image: redis:7-alpine
     ports:
       - "6379:6379"
     environment:
-      - REDIS_PASSWORD="redispassword"
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redispassword}
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "redispassword", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
