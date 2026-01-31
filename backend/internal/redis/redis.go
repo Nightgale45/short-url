@@ -63,3 +63,7 @@ func (rcs *RedisClientService) GetOriginalUrl(shortUrl string) (string, error) {
 
 	return url, err
 }
+
+func (rcs *RedisClientService) Close() {
+	rcs.redisClient.Close()
+}
