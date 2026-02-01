@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/Nightgale45/short-url/internal/config"
+	"github.com/Nightgale45/short-url/internal/handler"
 	"github.com/Nightgale45/short-url/internal/logger"
 	"github.com/Nightgale45/short-url/internal/postgres"
 	"github.com/Nightgale45/short-url/internal/redis"
@@ -15,8 +16,8 @@ func main() {
 	redis := redis.InitializeRedis(&conf.RedisConf)
 	postgres := postgres.InitDB(&conf.DatabaseConf)
 
-	redis.Close()
-	postgres.Close()
+	defer redis.Close()
+	defer postgres.Close()
 
 	r := gin.Default()
 
@@ -25,6 +26,9 @@ func main() {
 			"message": "hello world",
 		})
 	})
+
+	v1 := r.Group("/api/v1")
+	v1.POST("/shorten", handler.Shorten(postgres, redis))
 
 	r.Run(":8080")
 }
