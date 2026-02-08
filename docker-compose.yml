@@ -5,6 +5,8 @@ x-backend-base: &backend-base
     context: ./backend/
     dockerfile: Dockerfile
   restart: always
+  env_file:
+    - ./backend/.env
   ports:
     - "8080:8080"
   depends_on:
@@ -21,6 +23,7 @@ services:
       context: ./backend/
       dockerfile: Dockerfile
       target: development # this is targeting the backend dockerfile development
+    restart: always
     environment:
       - GIN_MODE=debug
     develop:
@@ -50,9 +53,9 @@ services:
     image: postgres:17-alpine
     restart: always
     environment:
-      - POSTGRES_DB=urlshortener
-      - POSTGRES_USER=urldev
-      - POSTGRES_PASSWORD=urlpassword
+      - POSTGRES_DB=${DATABASE_NAME:-urlshortener}
+      - POSTGRES_USER=${DATABASE_USER:-postgres}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD:-postgres-password}
     ports:
       - "5432:5432"
     healthcheck:

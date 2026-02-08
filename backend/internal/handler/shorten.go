@@ -74,7 +74,6 @@ func Shorten(db *postgres.DbPool, redis *redis.RedisClientService) gin.HandlerFu
 		redis.SaveUrlMapping(ctx, shortenKey, shortenRequest.OriginalUrl)
 
 		ginCtx.JSON(200, generateResponse(shortenRequest.OriginalUrl, &shortenKey, nil))
-
 	}
 }
 

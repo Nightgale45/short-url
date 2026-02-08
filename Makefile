@@ -9,7 +9,7 @@ BINARY_NAME=main
 LDFLAGS=-w -s
 
 dev:
-	$(DOCKER_COMPOSE) --profile dev up --watch
+	$(DOCKER_COMPOSE) --profile dev up --watch --build
 
 down:
 	$(DOCKER_COMPOSE) down

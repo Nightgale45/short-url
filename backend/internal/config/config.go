@@ -39,7 +39,7 @@ func LoadConf() *Config {
 		},
 		RedisConf: RedisConfig{
 			Addr:     getEnv("REDIS_URL", "locahost:6379"),
-			Password: getEnv("REDIS_PASSWORD", ""),
+			Password: getEnv("REDIS_PASSWORD", "redispassword"),
 			DB:       getEnvInt("REDIS_DB", 0),
 		},
 	}
