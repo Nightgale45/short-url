@@ -8,7 +8,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func InitDB(dbConf *config.DatabaseConfig) *pgxpool.Pool {
+type DbPool struct {
+	dbPool *pgxpool.Pool
+}
+
+func InitDB(dbConf *config.DatabaseConfig) *DbPool {
 	conf, err := pgxpool.ParseConfig(dbConf.Url)
 	if err != nil {
 		logger.GetInstance().Error("POSTGRES: Cannot create db config", "Error", err)
@@ -18,13 +22,13 @@ func InitDB(dbConf *config.DatabaseConfig) *pgxpool.Pool {
 	conf.MaxConns = int32(dbConf.MaxConns)
 	conf.MinConns = int32(dbConf.MinConns)
 
-	dbpool, err := pgxpool.NewWithConfig(context.Background(), conf)
+	pool, err := pgxpool.NewWithConfig(context.Background(), conf)
 	if err != nil {
 		logger.GetInstance().Error("POSTGRES: Cannot connect to db", "Error", err)
 		panic(err)
 	}
 
-	err = dbpool.Ping(context.Background())
+	err = pool.Ping(context.Background())
 	if err != nil {
 		logger.GetInstance().Error("POSTGRES: Cannot ping database", "Error", err)
 		panic(err)
@@ -32,5 +36,21 @@ func InitDB(dbConf *config.DatabaseConfig) *pgxpool.Pool {
 
 	logger.GetInstance().Info("POSTGRES: Successful ping of db")
 
-	return dbpool
+	return &DbPool{
+		dbPool: pool,
+	}
+}
+
+func (db *DbPool) InsertUrl(ctx context.Context, url string, salt int64, passcode *string) int64 {
+	sql := `INSERT INTO urls (original_url, salt, passcode) VALUES ($1, $2, $3) RETURNING id`
+
+	var id int64
+
+	db.dbPool.QueryRow(ctx, sql, url, salt, passcode).Scan(&id)
+
+	return id
+}
+
+func (db *DbPool) Close() {
+	db.dbPool.Close()
 }

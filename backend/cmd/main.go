@@ -18,7 +18,6 @@ func main() {
 
 	defer redis.Close()
 	defer postgres.Close()
-
 	r := gin.Default()
 
 	r.GET("/", func(ctx *gin.Context) {
