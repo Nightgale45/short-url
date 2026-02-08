@@ -13,7 +13,9 @@ type RedisClientService struct {
 	redisClient *redis.Client
 }
 
-const CacheDuration = 6 * time.Hour
+const cacheDuration = 24 * time.Hour
+
+var log = logger.GetInstance()
 
 func InitializeRedis(conf *config.RedisConfig) *RedisClientService {
 	rc := redis.NewClient(&redis.Options{
@@ -24,20 +26,20 @@ func InitializeRedis(conf *config.RedisConfig) *RedisClientService {
 
 	pong, err := rc.Ping(context.Background()).Result()
 	if err != nil {
-		logger.GetInstance().Error("REDIS: Error to connect", "Error", err)
+		log.Error("REDIS: Error to connect", "Error", err)
 		panic(err)
 	}
 
-	logger.GetInstance().Info("REDIS: started successfully",
+	log.Info("REDIS: started successfully",
 		"pong message", pong)
 
 	return &RedisClientService{redisClient: rc}
 }
 
-func (rcs *RedisClientService) SaveUrlMapping(shortUrl string, originalUrl string, userId string) {
-	err := rcs.redisClient.Set(context.Background(), shortUrl, originalUrl, CacheDuration)
+func (rcs *RedisClientService) SaveUrlMapping(ctx context.Context, shortUrl string, originalUrl string) {
+	err := rcs.redisClient.Set(ctx, shortUrl, originalUrl, cacheDuration)
 	if err != nil {
-		logger.GetInstance().Error("REDIS: Failed to save key url",
+		log.Error("REDIS: Failed to save key url",
 			"error", err,
 			"shortUrl", shortUrl,
 			"originalUrl", originalUrl)
@@ -45,16 +47,16 @@ func (rcs *RedisClientService) SaveUrlMapping(shortUrl string, originalUrl strin
 
 }
 
-func (rcs *RedisClientService) GetOriginalUrl(shortUrl string) (string, error) {
-	url, err := rcs.redisClient.Get(context.Background(), shortUrl).Result()
+func (rcs *RedisClientService) GetOriginalUrl(ctx context.Context, shortUrl string) (string, error) {
+	url, err := rcs.redisClient.Get(ctx, shortUrl).Result()
 
 	if err == redis.Nil {
-		logger.GetInstance().Info("REDIS: key does not exist",
+		log.Info("REDIS: key does not exist",
 			"shortUrl", shortUrl)
 		return "", nil
 
 	} else if err != nil {
-		logger.GetInstance().Error("REDIS: GetOrginalUrl failed",
+		log.Error("REDIS: redis Get failed",
 			"shortUrl", shortUrl,
 			"Error", err)
 

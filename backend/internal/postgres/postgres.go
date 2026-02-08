@@ -12,10 +12,12 @@ type DbPool struct {
 	dbPool *pgxpool.Pool
 }
 
+var log = logger.GetInstance()
+
 func InitDB(dbConf *config.DatabaseConfig) *DbPool {
 	conf, err := pgxpool.ParseConfig(dbConf.Url)
 	if err != nil {
-		logger.GetInstance().Error("POSTGRES: Cannot create db config", "Error", err)
+		log.Error("POSTGRES: Cannot create db config", "Error", err)
 		panic(err)
 	}
 
@@ -24,17 +26,17 @@ func InitDB(dbConf *config.DatabaseConfig) *DbPool {
 
 	pool, err := pgxpool.NewWithConfig(context.Background(), conf)
 	if err != nil {
-		logger.GetInstance().Error("POSTGRES: Cannot connect to db", "Error", err)
+		log.Error("POSTGRES: Cannot connect to db", "Error", err)
 		panic(err)
 	}
 
 	err = pool.Ping(context.Background())
 	if err != nil {
-		logger.GetInstance().Error("POSTGRES: Cannot ping database", "Error", err)
+		log.Error("POSTGRES: Cannot ping database", "Error", err)
 		panic(err)
 	}
 
-	logger.GetInstance().Info("POSTGRES: Successful ping of db")
+	log.Info("POSTGRES: Successful ping of db")
 
 	return &DbPool{
 		dbPool: pool,
@@ -47,7 +49,6 @@ func (db *DbPool) InsertUrl(ctx context.Context, url string, salt int64, passcod
 	var id int64
 
 	db.dbPool.QueryRow(ctx, sql, url, salt, passcode).Scan(&id)
-
 	return id
 }
 

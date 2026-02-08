@@ -26,6 +26,8 @@ type RedisConfig struct {
 	DB       int
 }
 
+var log = logger.GetInstance()
+
 func LoadConf() *Config {
 	godotenv.Load()
 	return &Config{
@@ -56,13 +58,13 @@ func getEnvInt(key string, defaultVal int) int {
 
 	val, err := strconv.Atoi(envVal)
 	if err != nil {
-		logger.GetInstance().Error("CONFIG: Cannot conver env vale to int",
+		log.Error("CONFIG: Cannot conver env vale to int",
 			"envKey", key)
 		panic(err)
 	}
 
 	if val == 0 {
-		logger.GetInstance().Warn("CONFIG: value is zero env key using default value",
+		log.Warn("CONFIG: value is zero env key using default value",
 			"envKey", key,
 			"defaultVal", defaultVal)
 		return defaultVal

@@ -2,6 +2,7 @@ package codec
 
 import (
 	"slices"
+	"strings"
 )
 
 const base62Str = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -14,8 +15,16 @@ func Base62Encoder(id int64, salt int64) string {
 	return base62Encoding(combined)
 }
 
-func Base62Decoder(str string) string {
-	return ""
+// return the id and salt
+func Base62Decoder(str string) (id int64, salt int64) {
+
+	result := base62Decoding(str)
+
+	salt = result & ((1 << 27) - 1)
+	id = result >> 27
+
+	return id, salt
+
 }
 
 func base62Encoding(value int64) string {
@@ -31,4 +40,16 @@ func base62Encoding(value int64) string {
 
 	slices.Reverse(encodeStr)
 	return string(encodeStr)
+}
+
+func base62Decoding(str string) int64 {
+	result := int64(0)
+
+	// don't need to do `ind, _` since i don't need the second value
+	for idx := range str {
+		result = (result * 62) + int64(strings.IndexByte(base62Str, str[idx]))
+	}
+
+	return result
+
 }
