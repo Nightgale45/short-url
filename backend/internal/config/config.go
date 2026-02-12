@@ -12,6 +12,7 @@ type Config struct {
 	Env          string
 	DatabaseConf DatabaseConfig
 	RedisConf    RedisConfig
+	BaseUrl      string
 }
 
 type DatabaseConfig struct {
@@ -42,6 +43,7 @@ func LoadConf() *Config {
 			Password: getEnv("REDIS_PASSWORD", "redispassword"),
 			DB:       getEnvInt("REDIS_DB", 0),
 		},
+		BaseUrl: getEnv("BASE_URL", "http://localhost:8080"),
 	}
 }
 

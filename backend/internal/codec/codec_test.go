@@ -2,6 +2,8 @@ package codec
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBase62Encoder(t *testing.T) {
@@ -36,9 +38,7 @@ func TestBase62Encoder(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
 			result := Base62Encoder(tt.input.id, tt.input.salt)
-			if result != tt.expected {
-				t.Errorf("expected: %s, actual: %s", tt.expected, result)
-			}
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 
@@ -73,13 +73,9 @@ func TestBase62Decoder(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
 			id, salt := Base62Decoder(tt.input.str)
-			if id != tt.expected[0] {
-				t.Errorf("ID - expected: %d, actual: %d", tt.expected[0], id)
-			}
 
-			if salt != tt.expected[1] {
-				t.Errorf("SALT - expected: %d, actual: %d", tt.expected[1], salt)
-			}
+			assert.Equal(t, tt.expected[0], id)
+			assert.Equal(t, tt.expected[1], salt)
 		})
 	}
 }
