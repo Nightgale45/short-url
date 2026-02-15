@@ -2,12 +2,13 @@ package models
 
 import "time"
 
-type ShortKey struct {
-	ShortUrl    string    `json:"short_url"`
+// represent the database columns
+type UrlData struct {
 	OriginalUrl string    `json:"original_url"`
 	CreatedAt   time.Time `json:"create_at"`
-	Counter     string    `json:"counter"`
+	Counter     int       `json:"counter"`
 	Passcode    string    `json:"passcode"`
+	Salt        int64     `json:"salt"`
 }
 
 type ShortenRequest struct {
@@ -19,4 +20,15 @@ type ShortenResponse struct {
 	OriginalUrl string  `json:"original_url" binding:"required"`
 	ShortenUrl  *string `json:"shorten_url"`
 	Error       *string `json:"error"`
+}
+
+type CacheData struct {
+	ShortenKey string
+	Data       UrlData
+}
+
+type RedirectData struct {
+	OriginalUrl string `json:"original_url"`
+	Counter     int    `json:"counter"`
+	Salt        int64  `json:"salt"`
 }

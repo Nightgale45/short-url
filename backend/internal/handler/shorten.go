@@ -2,10 +2,12 @@ package handler
 
 import (
 	"crypto/rand"
+	"encoding/json"
 	"math/big"
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/Nightgale45/short-url/internal/codec"
 	"github.com/Nightgale45/short-url/internal/logger"
@@ -39,27 +41,12 @@ func Shorten(db *postgres.DbPool, redis *redis.RedisClientService) gin.HandlerFu
 		if !validateUrl(shortenRequest.OriginalUrl) {
 			errMsg := "Error url is invalid"
 			ginCtx.JSON(400, generateResponse(shortenRequest.OriginalUrl, nil, &errMsg))
+			return
 		}
 
-		// encryptPass could be nil
-		var encryptPass *string
-
-		if shortenRequest.Passcode != nil {
-
-			hashed, err := bcrypt.GenerateFromPassword([]byte(*shortenRequest.Passcode), 10)
-			if err != nil {
-				errMsg := "Error generating url"
-				log.Error("SHORTEN: Error hashing passcode", "Error", err)
-				ginCtx.JSON(500, generateResponse(shortenRequest.OriginalUrl, nil, &errMsg))
-				return
-			}
-
-			hashStr := string(hashed)
-			encryptPass = &hashStr
-		}
+		passcode := encryptPasscode(shortenRequest.Passcode)
 
 		randNum, err := rand.Int(rand.Reader, big.NewInt(90_000_000))
-
 		if err != nil {
 			errMsg := "Error generating url"
 			log.Error("SHORTEN: Error generating salt number", "Error", err)
@@ -68,10 +55,31 @@ func Shorten(db *postgres.DbPool, redis *redis.RedisClientService) gin.HandlerFu
 		}
 
 		salt := randNum.Int64() + int64(10_000_000)
-		dbId := db.InsertUrl(ctx, shortenRequest.OriginalUrl, salt, encryptPass)
 
+		urlData := models.UrlData{
+			OriginalUrl: shortenRequest.OriginalUrl,
+			CreatedAt:   time.Now(),
+			Counter:     0,
+			Passcode:    *passcode,
+			Salt:        salt,
+		}
+
+		dbId := db.InsertUrlData(ctx, urlData)
 		shortenKey := codec.Base62Encoder(dbId, salt)
-		redis.SaveUrlMapping(ctx, shortenKey, shortenRequest.OriginalUrl)
+
+		jResp, err := json.Marshal(models.CacheData{
+			ShortenKey: shortenKey,
+			Data:       urlData,
+		})
+
+		if err != nil {
+			errMsg := "Error converting response to json"
+			log.Error("SHORTEN: Error converting response to json", "Error", err)
+			ginCtx.JSON(500, generateResponse(shortenRequest.OriginalUrl, nil, &errMsg))
+			return
+		}
+
+		redis.SaveUrlMapping(ctx, shortenKey, jResp)
 
 		ginCtx.JSON(200, generateResponse(shortenRequest.OriginalUrl, &shortenKey, nil))
 	}
@@ -107,4 +115,23 @@ func generateResponse(originalUrl string, shortenUrl *string, errorMessage *stri
 		ShortenUrl:  shortenUrl,
 		Error:       errorMessage,
 	}
+}
+
+func encryptPasscode(code *string) *string {
+
+	var encryptPass *string
+
+	if code != nil {
+
+		hashed, err := bcrypt.GenerateFromPassword([]byte(*code), 10)
+		if err != nil {
+			logger.GetInstance().Error("SHORTEN: encrypt passcode failed", "Error", err)
+			return nil
+		}
+
+		hashStr := string(hashed)
+		encryptPass = &hashStr
+	}
+
+	return encryptPass
 }

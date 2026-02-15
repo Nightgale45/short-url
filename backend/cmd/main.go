@@ -28,6 +28,7 @@ func main() {
 
 	v1 := r.Group("/api/v1")
 	v1.POST("/shorten", handler.Shorten(postgres, redis))
+	v1.GET("/:id", handler.Redirect(redis, postgres))
 
 	r.Run(":8080")
 }

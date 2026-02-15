@@ -36,34 +36,34 @@ func InitializeRedis(conf *config.RedisConfig) *RedisClientService {
 	return &RedisClientService{redisClient: rc}
 }
 
-func (rcs *RedisClientService) SaveUrlMapping(ctx context.Context, shortUrl string, originalUrl string) {
-	err := rcs.redisClient.Set(ctx, shortUrl, originalUrl, cacheDuration)
+func (rcs *RedisClientService) SaveUrlMapping(ctx context.Context, shortUrl string, urlData []byte) {
+	err := rcs.redisClient.Set(ctx, shortUrl, urlData, cacheDuration)
 	if err != nil {
 		log.Error("REDIS: Failed to save key url",
 			"error", err,
 			"shortUrl", shortUrl,
-			"originalUrl", originalUrl)
+			"originalUrl", urlData)
 	}
 
 }
 
-func (rcs *RedisClientService) GetOriginalUrl(ctx context.Context, shortUrl string) (string, error) {
-	url, err := rcs.redisClient.Get(ctx, shortUrl).Result()
+func (rcs *RedisClientService) GetOriginalUrl(ctx context.Context, shortUrl string) []byte {
+	jsonData, err := rcs.redisClient.Get(ctx, shortUrl).Result()
 
 	if err == redis.Nil {
 		log.Info("REDIS: key does not exist",
 			"shortUrl", shortUrl)
-		return "", nil
+		return nil
 
 	} else if err != nil {
 		log.Error("REDIS: redis Get failed",
 			"shortUrl", shortUrl,
 			"Error", err)
 
-		return "", nil
+		return nil
 	}
 
-	return url, err
+	return []byte(jsonData)
 }
 
 func (rcs *RedisClientService) Close() {
