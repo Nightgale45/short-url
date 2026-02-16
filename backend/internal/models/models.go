@@ -2,7 +2,9 @@ package models
 
 import "time"
 
-// represent the database columns
+/*
+########## Data base models ############
+*/
 type UrlData struct {
 	OriginalUrl string    `json:"original_url"`
 	CreatedAt   time.Time `json:"create_at"`
@@ -10,6 +12,21 @@ type UrlData struct {
 	Passcode    string    `json:"passcode"`
 	Salt        int64     `json:"salt"`
 }
+
+type RedirectData struct {
+	OriginalUrl string `json:"original_url"`
+	Counter     int    `json:"counter"`
+	Salt        int64  `json:"salt"`
+}
+
+type CacheData struct {
+	ShortenKey string
+	Data       UrlData
+}
+
+/*
+########## Customer Models ############
+*/
 
 type ShortenRequest struct {
 	OriginalUrl string  `json:"original_url" binding:"required"`
@@ -19,16 +36,4 @@ type ShortenRequest struct {
 type ShortenResponse struct {
 	OriginalUrl string  `json:"original_url" binding:"required"`
 	ShortenUrl  *string `json:"shorten_url"`
-	Error       *string `json:"error"`
-}
-
-type CacheData struct {
-	ShortenKey string
-	Data       UrlData
-}
-
-type RedirectData struct {
-	OriginalUrl string `json:"original_url"`
-	Counter     int    `json:"counter"`
-	Salt        int64  `json:"salt"`
 }

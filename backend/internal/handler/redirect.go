@@ -34,7 +34,7 @@ func Redirect(redis *redis.RedisClientService, db *postgres.DbPool) gin.HandlerF
 
 			data, err := db.QueryRow(ctx, id)
 			if err != nil {
-				ginCtx.JSON(400, "Data invalid")
+				ginCtx.JSON(400, "Data not available")
 				return
 			}
 

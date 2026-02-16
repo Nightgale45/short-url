@@ -32,15 +32,13 @@ func Shorten(db *postgres.DbPool, redis *redis.RedisClientService) gin.HandlerFu
 		// should use should bind to consume the request and assugn to the var
 		err := ginCtx.ShouldBindJSON(&shortenRequest)
 		if err != nil {
-			errMsg := "Malform request"
 			log.Error("SHORTEN: Error binding json request to struct", "Error", err)
-			ginCtx.JSON(400, generateResponse(shortenRequest.OriginalUrl, nil, &errMsg))
+			ginCtx.JSON(400, generateResponse(shortenRequest.OriginalUrl, nil))
 			return
 		}
 
 		if !validateUrl(shortenRequest.OriginalUrl) {
-			errMsg := "Error url is invalid"
-			ginCtx.JSON(400, generateResponse(shortenRequest.OriginalUrl, nil, &errMsg))
+			ginCtx.JSON(400, generateResponse(shortenRequest.OriginalUrl, nil))
 			return
 		}
 
@@ -48,9 +46,8 @@ func Shorten(db *postgres.DbPool, redis *redis.RedisClientService) gin.HandlerFu
 
 		randNum, err := rand.Int(rand.Reader, big.NewInt(90_000_000))
 		if err != nil {
-			errMsg := "Error generating url"
 			log.Error("SHORTEN: Error generating salt number", "Error", err)
-			ginCtx.JSON(500, generateResponse(shortenRequest.OriginalUrl, nil, &errMsg))
+			ginCtx.JSON(500, generateResponse(shortenRequest.OriginalUrl, nil))
 			return
 		}
 
@@ -73,15 +70,14 @@ func Shorten(db *postgres.DbPool, redis *redis.RedisClientService) gin.HandlerFu
 		})
 
 		if err != nil {
-			errMsg := "Error converting response to json"
 			log.Error("SHORTEN: Error converting response to json", "Error", err)
-			ginCtx.JSON(500, generateResponse(shortenRequest.OriginalUrl, nil, &errMsg))
+			ginCtx.JSON(500, generateResponse(shortenRequest.OriginalUrl, nil))
 			return
 		}
 
 		redis.SaveUrlMapping(ctx, shortenKey, jResp)
 
-		ginCtx.JSON(200, generateResponse(shortenRequest.OriginalUrl, &shortenKey, nil))
+		ginCtx.JSON(200, generateResponse(shortenRequest.OriginalUrl, &shortenKey))
 	}
 }
 
@@ -109,11 +105,10 @@ func validateUrl(userUrl string) bool {
 	return match
 }
 
-func generateResponse(originalUrl string, shortenUrl *string, errorMessage *string) models.ShortenResponse {
+func generateResponse(originalUrl string, shortenUrl *string) models.ShortenResponse {
 	return models.ShortenResponse{
 		OriginalUrl: originalUrl,
 		ShortenUrl:  shortenUrl,
-		Error:       errorMessage,
 	}
 }
 
