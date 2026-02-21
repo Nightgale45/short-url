@@ -6,7 +6,6 @@ import (
 	"github.com/Nightgale45/short-url/internal/config"
 	"github.com/Nightgale45/short-url/internal/logger"
 	"github.com/Nightgale45/short-url/internal/models"
-	"github.com/go-playground/locales/ur"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

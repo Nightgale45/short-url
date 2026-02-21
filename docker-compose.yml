@@ -15,8 +15,33 @@ x-backend-base: &backend-base
     redis:
       condition: service_healthy
 
+x-frontend-base: &frontend-base
+  build:
+    context: ./frontend/
+    dockerfile: Dockerfile
+  restart: always
+
+
 services:
-  dev:
+
+# -------------------------------------------------------------------------------------
+# DEVLOPMENT
+# -------------------------------------------------------------------------------------
+  
+  dev-frontend:
+    <<: *frontend-base
+    profiles: ["dev"]
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile
+      target: development
+    ports: 
+      - "80:80"
+    volumes:
+      - ./frontend/:/app
+      - /app/node_modules
+
+  dev-backend:
     <<: *backend-base
     profiles: ["dev"] # this tell docker compose what services to build
     build:
@@ -26,26 +51,43 @@ services:
     restart: always
     environment:
       - GIN_MODE=debug
-    develop:
-      watch:
-        - action: sync
-          path: ./backend
-          target: /app
-          ignore:
-            - tmp/
-            - vendor/
-        - action: rebuild
-          path: ./backend/go.mod
-        - action: rebuild
-          path: ./backend/go.sum
+    volumes:
+      - ./backend/:/app
+      - /app/tmp
+    # develop:
+    #   watch:
+    #     - action: sync
+    #       path: ./backend
+    #       target: /app
+    #       ignore:
+    #         - tmp/
+    #         - vendor/
+    #     - action: rebuild
+    #       path: ./backend/go.mod
+    #     - action: rebuild
+    #       path: ./backend/go.sum
 
-  prod:
+# -------------------------------------------------------------------------------------
+# PRODUCTION
+# -------------------------------------------------------------------------------------
+  production-backend:
     <<: *backend-base
     profiles: ["prod"]
     build:
+      context: ./backend/
+      dockerfile: Dockerfile
       target: production
     environment:
       - GIN_MODE=release
+
+  production-frontend:
+    <<: *frontend-base
+    profiles: ["prod"]
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile
+      target: production
+
 
   #this service name acts as the host name db connection
   postgres:
@@ -67,6 +109,7 @@ services:
   redis:
     profiles: ["dev", "prod"]
     image: redis:7-alpine
+    restart: always
     ports:
       - "6379:6379"
     environment:
@@ -76,3 +119,5 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+# ----------------------------------------------------------------------------------------

@@ -38,7 +38,7 @@ func Redirect(redis *redis.RedisClientService, db *postgres.DbPool) gin.HandlerF
 				return
 			}
 
-			if salt == salt {
+			if data.Salt == salt {
 				ginCtx.Redirect(http.StatusPermanentRedirect, data.OriginalUrl)
 				data.Counter++
 				db.UpdateData(ctx, id, data.Counter)

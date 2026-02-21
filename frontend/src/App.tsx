@@ -1,10 +1,12 @@
-import "./App.css";
+import Header from "./components/header/Header";
 
 function App() {
   return (
-    <div>
-      <p> test front page </p>
-    </div>
+    <>
+      <div className="mx-auto w-96 top-4 relative">
+        <Header></Header>
+      </div>
+    </>
   );
 }
 

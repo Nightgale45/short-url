@@ -9,13 +9,17 @@ BINARY_NAME=main
 LDFLAGS=-w -s
 
 dev:
-	$(DOCKER_COMPOSE) --profile dev up --watch --build
+	# $(DOCKER_COMPOSE) --profile dev up --watch --build
+	$(DOCKER_COMPOSE) --profile dev up --build -d
 
-down:
-	$(DOCKER_COMPOSE) down
+dev-down:
+	$(DOCKER_COMPOSE) --profile dev down
+
+prod-down:
+	$(DOCKER_COMPOSE) --profile prod down
 
 prod:
-	$(DOCKER_COMPOSE) --profile prod up
+	$(DOCKER_COMPOSE) --profile prod up --build
 
 # multi-line will not work since each line runs in a separate shell
 # to write multi-line either use && or "\"
