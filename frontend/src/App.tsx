@@ -1,12 +1,14 @@
-import Header from "./components/header/Header";
+import { Button } from "@/components/ui/button";
+import { ArrowUpIcon } from "lucide-react";
 
 function App() {
   return (
-    <>
-      <div className="mx-auto w-96 top-4 relative">
-        <Header></Header>
-      </div>
-    </>
+    <div className="flex flex-wrap items-center gap-2 md:flex-row">
+      <Button variant="outline">Button</Button>
+      <Button variant="outline" size="icon" aria-label="Submit">
+        <ArrowUpIcon />
+      </Button>
+    </div>
   );
 }
 
