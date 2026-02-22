@@ -1,5 +1,5 @@
 root = "."
-tmp_dir = "/tmp/air"
+tmp_dir = "../tmp/air"
 
 [build]
   bin = "../tmp/air/main"

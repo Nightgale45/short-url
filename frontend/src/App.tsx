@@ -1,13 +1,16 @@
-import { Button } from "@/components/ui/button";
-import { ArrowUpIcon } from "lucide-react";
+import { BrowserRouter, Routes } from "react-router";
+import Bar from "./components/bar/bar";
 
 function App() {
   return (
-    <div className="flex flex-wrap items-center gap-2 md:flex-row">
-      <Button variant="outline">Button</Button>
-      <Button variant="outline" size="icon" aria-label="Submit">
-        <ArrowUpIcon />
-      </Button>
+    <div className="min-h-full px-[10%]">
+            <BrowserRouter>
+                <Routes>
+                    {/* <Route path="/"></Route> */}
+                    {/* <Route path></Route> */}
+                </Routes>
+            </BrowserRouter>
+      <Bar></Bar>
     </div>
   );
 }
