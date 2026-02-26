@@ -23,25 +23,19 @@ func Redirect(redis *redis.RedisClientService, db *postgres.DbPool) gin.HandlerF
 			json.Unmarshal(cache, &data)
 
 			ginCtx.Redirect(http.StatusAccepted, data.Data.OriginalUrl)
-			data.Data.Counter++
 
-			id, _ := codec.Base62Decoder(data.ShortenKey)
-
-			db.UpdateData(ctx, id, data.Data.Counter)
 		} else {
 
 			id, salt := codec.Base62Decoder(key)
 
-			data, err := db.QueryRow(ctx, id)
+			url, dbSalt, err := db.QueryRow(ctx, id)
 			if err != nil {
 				ginCtx.JSON(400, "Data not available")
 				return
 			}
 
-			if data.Salt == salt {
-				ginCtx.Redirect(http.StatusPermanentRedirect, data.OriginalUrl)
-				data.Counter++
-				db.UpdateData(ctx, id, data.Counter)
+			if dbSalt == salt {
+				ginCtx.Redirect(http.StatusPermanentRedirect, url)
 			}
 		}
 

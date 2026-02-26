@@ -45,37 +45,26 @@ func InitDB(dbConf *config.DatabaseConfig) *DbPool {
 }
 
 func (db *DbPool) InsertUrlData(ctx context.Context, data models.UrlData) int64 {
-	sql := `INSERT INTO url_data (original_url, created_at, counter, passcode) VALUES ($1, $2, $3, $4) RETURNING id`
+	sql := `INSERT INTO url_data (original_url, created_at) VALUES ($1, $2) RETURNING id`
 
 	var id int64
 
-	db.dbPool.QueryRow(ctx, sql, data.OriginalUrl, data.CreatedAt, data.Counter, data.Passcode).Scan(&id)
+	db.dbPool.QueryRow(ctx, sql, data.OriginalUrl, data.CreatedAt).Scan(&id)
 	return id
 }
 
-func (db *DbPool) UpdateData(ctx context.Context, id int64, count int) {
-	sql := `UPDATE url_data SET count = $1 WHERE id = $2`
-
-	db.dbPool.QueryRow(ctx, sql, id, count)
-}
-
-func (db *DbPool) QueryRow(ctx context.Context, id int64) (*models.RedirectData, error) {
+func (db *DbPool) QueryRow(ctx context.Context, id int64) (string, int64, error) {
 	sql := `SELECT original_url, salt, counter FROM url_data WHERE id = $1`
 
 	var url string
 	var salt int64
-	var counter int
 
-	err := db.dbPool.QueryRow(ctx, sql, id).Scan(&url, &salt, &counter)
+	err := db.dbPool.QueryRow(ctx, sql, id).Scan(&url, &salt)
 	if err != nil {
-		return nil, err
+		return "", 0, err
 	}
 
-	return &models.RedirectData{
-		OriginalUrl: url,
-		Salt:        salt,
-		Counter:     counter,
-	}, nil
+	return url, salt, nil
 }
 
 func (db *DbPool) Close() {

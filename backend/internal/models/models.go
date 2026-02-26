@@ -8,15 +8,7 @@ import "time"
 type UrlData struct {
 	OriginalUrl string    `json:"original_url"`
 	CreatedAt   time.Time `json:"create_at"`
-	Counter     int       `json:"counter"`
-	Passcode    string    `json:"passcode"`
 	Salt        int64     `json:"salt"`
-}
-
-type RedirectData struct {
-	OriginalUrl string `json:"original_url"`
-	Counter     int    `json:"counter"`
-	Salt        int64  `json:"salt"`
 }
 
 type CacheData struct {

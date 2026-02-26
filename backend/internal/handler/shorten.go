@@ -42,8 +42,6 @@ func Shorten(db *postgres.DbPool, redis *redis.RedisClientService) gin.HandlerFu
 			return
 		}
 
-		passcode := encryptPasscode(shortenRequest.Passcode)
-
 		randNum, err := rand.Int(rand.Reader, big.NewInt(90_000_000))
 		if err != nil {
 			log.Error("SHORTEN: Error generating salt number", "Error", err)
@@ -56,8 +54,6 @@ func Shorten(db *postgres.DbPool, redis *redis.RedisClientService) gin.HandlerFu
 		urlData := models.UrlData{
 			OriginalUrl: shortenRequest.OriginalUrl,
 			CreatedAt:   time.Now(),
-			Counter:     0,
-			Passcode:    *passcode,
 			Salt:        salt,
 		}
 
@@ -110,23 +106,4 @@ func generateResponse(originalUrl string, shortenUrl *string) models.ShortenResp
 		OriginalUrl: originalUrl,
 		ShortenUrl:  shortenUrl,
 	}
-}
-
-func encryptPasscode(code *string) *string {
-
-	var encryptPass *string
-
-	if code != nil {
-
-		hashed, err := bcrypt.GenerateFromPassword([]byte(*code), 10)
-		if err != nil {
-			logger.GetInstance().Error("SHORTEN: encrypt passcode failed", "Error", err)
-			return nil
-		}
-
-		hashStr := string(hashed)
-		encryptPass = &hashStr
-	}
-
-	return encryptPass
 }
