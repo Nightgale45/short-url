@@ -15,6 +15,9 @@ export default defineConfig({
       usePolling: true,
     },
     port: 80,
+    proxy: {
+      "/api": "http://localhost:8080",
+    },
   },
   resolve: {
     alias: {

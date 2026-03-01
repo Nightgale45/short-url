@@ -1,5 +1,5 @@
 # this is a yaml anchor where multiple service can reference the same base
-# the "x-" is a convertion for extension fields which is ignored by docker 
+# the "x-" is a convertion for extension fields which is ignored by docker
 x-backend-base: &backend-base
   build:
     context: ./backend/
@@ -21,13 +21,11 @@ x-frontend-base: &frontend-base
     dockerfile: Dockerfile
   restart: always
 
-
 services:
+  # -------------------------------------------------------------------------------------
+  # DEVLOPMENT
+  # -------------------------------------------------------------------------------------
 
-# -------------------------------------------------------------------------------------
-# DEVLOPMENT
-# -------------------------------------------------------------------------------------
-  
   dev-frontend:
     <<: *frontend-base
     profiles: ["dev"]
@@ -35,7 +33,7 @@ services:
       context: ./frontend/
       dockerfile: Dockerfile
       target: development
-    ports: 
+    ports:
       - "80:80"
     volumes:
       - ./frontend/:/app
@@ -67,9 +65,9 @@ services:
     #     - action: rebuild
     #       path: ./backend/go.sum
 
-# -------------------------------------------------------------------------------------
-# PRODUCTION
-# -------------------------------------------------------------------------------------
+  # -------------------------------------------------------------------------------------
+  # PRODUCTION
+  # -------------------------------------------------------------------------------------
   production-backend:
     <<: *backend-base
     profiles: ["prod"]
@@ -88,7 +86,6 @@ services:
       dockerfile: Dockerfile
       target: production
 
-
   #this service name acts as the host name db connection
   postgres:
     profiles: ["dev", "prod"]
@@ -101,10 +98,13 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migration:/docker-entrypoint-initdb.d
 
   redis:
     profiles: ["dev", "prod"]
@@ -119,5 +119,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+volumes:
+  postgres_data:
 
 # ----------------------------------------------------------------------------------------

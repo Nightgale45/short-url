@@ -21,8 +21,7 @@ type CacheData struct {
 */
 
 type ShortenRequest struct {
-	OriginalUrl string  `json:"original_url" binding:"required"`
-	Passcode    *string `json:"passcode"` // needs to be a point for nil if not password and if no binding it becomes optional
+	OriginalUrl string `json:"original_url" binding:"required"`
 }
 
 type ShortenResponse struct {

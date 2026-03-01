@@ -15,7 +15,6 @@ import (
 	"github.com/Nightgale45/short-url/internal/postgres"
 	"github.com/Nightgale45/short-url/internal/redis"
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 )
 
 // allow for subdomain but does not allow the beginning or end of domain with hyphen
