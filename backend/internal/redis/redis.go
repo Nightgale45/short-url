@@ -2,12 +2,20 @@ package redis
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/Nightgale45/short-url/internal/config"
 	"github.com/Nightgale45/short-url/internal/logger"
+	"github.com/Nightgale45/short-url/internal/models"
 	"github.com/redis/go-redis/v9"
 )
+
+type RedisService interface {
+	SaveUrlMapping(ctx context.Context, shortUrl string, urlData []byte)
+	GetOriginalUrl(ctx context.Context, shortUrl string) *models.CacheData
+	Close()
+}
 
 type RedisClientService struct {
 	redisClient *redis.Client
@@ -37,7 +45,7 @@ func InitializeRedis(conf *config.RedisConfig) *RedisClientService {
 }
 
 func (rcs *RedisClientService) SaveUrlMapping(ctx context.Context, shortUrl string, urlData []byte) {
-	err := rcs.redisClient.Set(ctx, shortUrl, urlData, cacheDuration)
+	err := rcs.redisClient.Set(ctx, shortUrl, urlData, cacheDuration).Err()
 	if err != nil {
 		log.Error("REDIS: Failed to save key url",
 			"error", err,
@@ -47,7 +55,7 @@ func (rcs *RedisClientService) SaveUrlMapping(ctx context.Context, shortUrl stri
 
 }
 
-func (rcs *RedisClientService) GetOriginalUrl(ctx context.Context, shortUrl string) []byte {
+func (rcs *RedisClientService) GetOriginalUrl(ctx context.Context, shortUrl string) *models.CacheData {
 	jsonData, err := rcs.redisClient.Get(ctx, shortUrl).Result()
 
 	if err == redis.Nil {
@@ -63,7 +71,13 @@ func (rcs *RedisClientService) GetOriginalUrl(ctx context.Context, shortUrl stri
 		return nil
 	}
 
-	return []byte(jsonData)
+	var data models.CacheData
+	if err := json.Unmarshal([]byte(jsonData), &data); err != nil {
+		log.Error("REDIS: failed to unmarshal cache data", "error", err)
+		return nil
+	}
+
+	return &data
 }
 
 func (rcs *RedisClientService) Close() {

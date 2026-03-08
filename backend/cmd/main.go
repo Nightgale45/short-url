@@ -13,11 +13,11 @@ func main() {
 	logger.GetInstance().Info("Starting up the application")
 
 	conf := config.LoadConf()
-	redis := redis.InitializeRedis(&conf.RedisConf)
-	postgres := postgres.InitDB(&conf.DatabaseConf)
+	redisClient := redis.InitializeRedis(&conf.RedisConf)
+	postgresClient := postgres.InitDB(&conf.DatabaseConf)
 
-	defer redis.Close()
-	defer postgres.Close()
+	defer redisClient.Close()
+	defer postgresClient.Close()
 	r := gin.Default()
 
 	r.GET("/", func(ctx *gin.Context) {
@@ -27,8 +27,8 @@ func main() {
 	})
 
 	v1 := r.Group("/api/v1")
-	v1.POST("/shorten", handler.Shorten(postgres, redis))
-	v1.GET("/:id", handler.Redirect(redis, postgres))
+	v1.POST("/shorten", handler.Shorten(postgresClient, redisClient))
+	v1.GET("/:id", handler.Redirect(redisClient, postgresClient))
 
 	r.Run(":8080")
 }

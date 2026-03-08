@@ -23,7 +23,7 @@ const pattern = `^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-
 var log = logger.GetInstance()
 
 // Receive a url and create a shorten url to return
-func Shorten(db *postgres.DbPool, redis *redis.RedisClientService) gin.HandlerFunc {
+func Shorten(db postgres.DbService, redis *redis.RedisClientService) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var shortenRequest models.ShortenRequest
 		ctx := ginCtx.Request.Context()

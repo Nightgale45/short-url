@@ -1,41 +1,43 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/Nightgale45/short-url/internal/codec"
-	"github.com/Nightgale45/short-url/internal/models"
 	"github.com/Nightgale45/short-url/internal/postgres"
 	"github.com/Nightgale45/short-url/internal/redis"
 	"github.com/gin-gonic/gin"
 )
 
-func Redirect(redis *redis.RedisClientService, db *postgres.DbPool) gin.HandlerFunc {
+func Redirect(redis redis.RedisService, db postgres.DbService) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		key := ginCtx.Param("id")
 		ctx := ginCtx.Request.Context()
 
-		cache := redis.GetOriginalUrl(ctx, key)
+		data := redis.GetOriginalUrl(ctx, key)
 
-		if cache != nil {
-			var data models.CacheData
-			json.Unmarshal(cache, &data)
-
-			ginCtx.Redirect(http.StatusAccepted, data.Data.OriginalUrl)
-
+		if data != nil {
+			ginCtx.Redirect(http.StatusPermanentRedirect, data.Data.OriginalUrl)
+			return
 		} else {
 
 			id, salt := codec.Base62Decoder(key)
 
-			url, dbSalt, err := db.QueryRow(ctx, id)
-			if err != nil {
-				ginCtx.JSON(400, "Data not available")
-				return
-			}
+			if id != -1 {
+				url, dbSalt, err := db.QueryRow(ctx, id)
 
-			if dbSalt == salt {
-				ginCtx.Redirect(http.StatusPermanentRedirect, url)
+				if err != nil {
+					ginCtx.Redirect(http.StatusTemporaryRedirect, "http://localhost:80/not-found")
+					return
+				}
+
+				if dbSalt == salt {
+					ginCtx.Redirect(http.StatusPermanentRedirect, url)
+				}
+			} else {
+				// Add a env for base url
+				ginCtx.Redirect(http.StatusTemporaryRedirect, "http://localhost:80/not-found")
+				return
 			}
 		}
 

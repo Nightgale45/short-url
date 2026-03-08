@@ -9,6 +9,12 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+type DbService interface {
+	InsertUrlData(ctx context.Context, data models.UrlData) int64
+	QueryRow(ctx context.Context, id int64) (string, int64, error)
+	Close()
+}
+
 type DbPool struct {
 	dbPool *pgxpool.Pool
 }

@@ -45,11 +45,13 @@ func base62Encoding(value int64) string {
 func base62Decoding(str string) int64 {
 	result := int64(0)
 
-	// don't need to do `ind, _` since i don't need the second value
 	for idx := range str {
-		result = (result * 62) + int64(strings.IndexByte(base62Str, str[idx]))
+		pos := strings.IndexByte(base62Str, str[idx])
+		if pos == -1 {
+			return -1
+		}
+		result = (result * 62) + int64(pos)
 	}
 
 	return result
-
 }
