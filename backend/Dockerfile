@@ -10,10 +10,12 @@ RUN go mod download
 FROM dependencies AS development
 
 RUN go install github.com/air-verse/air@latest
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
 
 COPY . .
 
 EXPOSE 8080
+EXPOSE 4000
 
 CMD ["air", "-c", ".air.toml"]
 

@@ -3,7 +3,8 @@ tmp_dir = "../tmp/air"
 
 [build]
   bin = "../tmp/air/main"
-  cmd = "go build -o ../tmp/air/main ./cmd/"
+  cmd = "go build -gcflags='all=-N -l' -o ../tmp/air/main ./cmd/"
+  full_bin = "dlv exec ../tmp/air/main --headless --listen=:4000 --api-version=2 --accept-multiclient --continue"
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata", "bin"]
   exclude_regex = ["_test.go"]

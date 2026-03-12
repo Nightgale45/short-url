@@ -18,6 +18,7 @@ function Shorten() {
   const handleSubmit = async () => {
     const response = await shorten({ original_url: inputValue });
     const data = await response.json();
+    console.log(data)
   };
 
   return (

@@ -14,12 +14,16 @@ x-backend-base: &backend-base
       condition: service_healthy
     redis:
       condition: service_healthy
+  networks:
+    - app-networks
 
 x-frontend-base: &frontend-base
   build:
     context: ./frontend/
     dockerfile: Dockerfile
   restart: always
+  networks:
+    - app-networks
 
 services:
   # -------------------------------------------------------------------------------------
@@ -38,10 +42,15 @@ services:
     volumes:
       - ./frontend/:/app
       - /app/node_modules
+    networks:
+      - app-networks
 
   dev-backend:
     <<: *backend-base
     profiles: ["dev"] # this tell docker compose what services to build
+    ports:
+      - "8080:8080"
+      - "4000:4000"
     build:
       context: ./backend/
       dockerfile: Dockerfile
@@ -52,6 +61,8 @@ services:
     volumes:
       - ./backend/:/app
       - /app/tmp
+    networks:
+      - app-networks
     # develop:
     #   watch:
     #     - action: sync
@@ -81,6 +92,8 @@ services:
   production-frontend:
     <<: *frontend-base
     profiles: ["prod"]
+    ports:
+      - "80:80"
     build:
       context: ./frontend/
       dockerfile: Dockerfile
@@ -105,6 +118,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./migration:/docker-entrypoint-initdb.d
+    networks:
+      - app-networks
 
   redis:
     profiles: ["dev", "prod"]
@@ -119,8 +134,17 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-networks
+
+networks:
+  app-networks:
+    driver: bridge
 
 volumes:
   postgres_data:
+  redis_data:
 
 # ----------------------------------------------------------------------------------------
