@@ -1,56 +1,32 @@
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import ShortenSubmit from "@/components/shorten-submit";
+import ShortenReponse from "@/components/shorten-reponse";
 import { shorten } from "@/services/shorten.service";
 import { useState } from "react";
+import type { ShortenRequest, ShortenResponse } from "@/models/shorten";
 
 function Shorten() {
-  const [inputValue, setinputValue] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<ShortenResponse | null>(null);
 
-  const handleSubmit = async () => {
-    const response = await shorten({ original_url: inputValue });
-    const data = await response.json();
-    console.log(data)
+  const handleSubmit = async (url: string) => {
+    setLoading(true);
+    setResult(null); // clear previous result on new submission
+
+    const request: ShortenRequest = { original_url: url };
+    const data = await shorten(request);
+    setResult(data);
+
+    setLoading(false);
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <Card className="w-md">
-        <CardHeader>
-          <CardTitle>Link Shortener</CardTitle>
-          <CardDescription>Enter a link to shorten</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Link</Label>
-                <Input
-                  id="link"
-                  type="text"
-                  placeholder="https://google.com"
-                  onChange={(e) => setinputValue(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-          </form>
-        </CardContent>
-        <CardFooter>
-          <Button type="submit" className="w-full" onClick={handleSubmit}>
-            Submit
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
+    <>
+      <div className="submit-content">
+        <ShortenSubmit onSubmit={handleSubmit} disableSubmit={loading} />
+        {/* Only render ShortenReponse once data is returned */}
+        {result && <ShortenReponse data={result} />}
+      </div>
+    </>
   );
 }
 

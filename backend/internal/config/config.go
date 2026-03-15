@@ -43,7 +43,7 @@ func LoadConf() *Config {
 			Password: getEnv("REDIS_PASSWORD", "redispassword"),
 			DB:       getEnvInt("REDIS_DB", 0),
 		},
-		BaseUrl: getEnv("BASE_URL", "http://localhost:8080"),
+		BaseUrl: getEnv("BASE_URL", "http://localhost"),
 	}
 }
 
