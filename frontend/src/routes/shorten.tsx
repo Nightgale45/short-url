@@ -13,8 +13,12 @@ function Shorten() {
     setResult(null); // clear previous result on new submission
 
     const request: ShortenRequest = { original_url: url };
-    const data = await shorten(request);
-    setResult(data);
+    try {
+      const data = await shorten(request);
+      setResult(data);
+    } catch (e) {
+      console.error(e);
+    }
 
     setLoading(false);
   };

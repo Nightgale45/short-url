@@ -60,7 +60,7 @@ func (db *DbPool) InsertUrlData(ctx context.Context, data models.UrlData) int64 
 }
 
 func (db *DbPool) QueryRow(ctx context.Context, id int64) (string, int64, error) {
-	sql := `SELECT original_url, salt, counter FROM url_data WHERE id = $1`
+	sql := `SELECT original_url, salt FROM url_data WHERE id = $1`
 
 	var url string
 	var salt int64
