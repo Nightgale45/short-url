@@ -12,8 +12,8 @@ type UrlData struct {
 }
 
 type CacheData struct {
-	ShortenKey string
-	Data       UrlData
+	ShortenKey string  `json:"shorten_key"`
+	Data       UrlData `json:"data"`
 }
 
 /*
@@ -25,6 +25,6 @@ type ShortenRequest struct {
 }
 
 type ShortenResponse struct {
-	OriginalUrl string  `json:"original_url" binding:"required"`
-	ShortenUrl  *string `json:"shorten_url"`
+	OriginalUrl string `json:"original_url"`
+	ShortenUrl  string `json:"shorten_url"`
 }

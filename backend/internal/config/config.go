@@ -30,7 +30,9 @@ type RedisConfig struct {
 var log = logger.GetInstance()
 
 func LoadConf() *Config {
-	godotenv.Load()
+	if err := godotenv.Load(); err != nil {
+		log.Warn("CONFIG: .env file not found or could not be loaded", "error", err)
+	}
 	return &Config{
 		Env: getEnv("ENVIRONMENT", "development"),
 		DatabaseConf: DatabaseConfig{
@@ -39,7 +41,7 @@ func LoadConf() *Config {
 			MinConns: getEnvInt("DATABASE_MIN_CONN", 1),
 		},
 		RedisConf: RedisConfig{
-			Addr:     getEnv("REDIS_URL", "locahost:6379"),
+			Addr:     getEnv("REDIS_URL", "localhost:6379"),
 			Password: getEnv("REDIS_PASSWORD", "redispassword"),
 			DB:       getEnvInt("REDIS_DB", 0),
 		},
@@ -58,15 +60,13 @@ func getEnv(key string, defaultValue string) string {
 func getEnvInt(key string, defaultVal int) int {
 	envVal := os.Getenv(key)
 
-	val, err := strconv.Atoi(envVal)
-	if err != nil {
-		log.Error("CONFIG: Cannot conver env vale to int",
-			"envKey", key)
-		panic(err)
+	if envVal == "" {
+		return defaultVal
 	}
 
-	if val == 0 {
-		log.Warn("CONFIG: value is zero env key using default value",
+	val, err := strconv.Atoi(envVal)
+	if err != nil {
+		log.Warn("CONFIG: cannot convert env value to int, using default",
 			"envKey", key,
 			"defaultVal", defaultVal)
 		return defaultVal

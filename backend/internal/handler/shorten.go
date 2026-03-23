@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"math/big"
+	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
@@ -20,7 +21,10 @@ import (
 // allow for subdomain but does not allow the beginning or end of domain with hyphen
 const pattern = `^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$`
 
-var log = logger.GetInstance()
+var (
+	log         = logger.GetInstance()
+	hostPattern = regexp.MustCompile(pattern)
+)
 
 // Receive a url and create a shorten url to return
 func Shorten(db postgres.DbService, redis redis.RedisService) gin.HandlerFunc {
@@ -32,19 +36,19 @@ func Shorten(db postgres.DbService, redis redis.RedisService) gin.HandlerFunc {
 		err := ginCtx.ShouldBindJSON(&shortenRequest)
 		if err != nil {
 			log.Error("SHORTEN: Error binding json request to struct", "Error", err)
-			ginCtx.JSON(400, generateResponse(shortenRequest.OriginalUrl, nil))
+			ginCtx.JSON(http.StatusBadRequest, generateResponse(shortenRequest.OriginalUrl, ""))
 			return
 		}
 
 		if !validateUrl(shortenRequest.OriginalUrl) {
-			ginCtx.JSON(400, generateResponse(shortenRequest.OriginalUrl, nil))
+			ginCtx.JSON(http.StatusBadRequest, generateResponse(shortenRequest.OriginalUrl, ""))
 			return
 		}
 
 		randNum, err := rand.Int(rand.Reader, big.NewInt(90_000_000))
 		if err != nil {
 			log.Error("SHORTEN: Error generating salt number", "Error", err)
-			ginCtx.JSON(500, generateResponse(shortenRequest.OriginalUrl, nil))
+			ginCtx.JSON(http.StatusInternalServerError, generateResponse(shortenRequest.OriginalUrl, ""))
 			return
 		}
 
@@ -52,11 +56,17 @@ func Shorten(db postgres.DbService, redis redis.RedisService) gin.HandlerFunc {
 
 		urlData := models.UrlData{
 			OriginalUrl: shortenRequest.OriginalUrl,
-			CreatedAt:   time.Now(),
+			CreatedAt:   time.Now().UTC(),
 			Salt:        salt,
 		}
 
-		dbId := db.InsertUrlData(ctx, urlData)
+		dbId, err := db.InsertUrlData(ctx, urlData)
+		if err != nil {
+			log.Error("SHORTEN: Error inserting url data", "Error", err)
+			ginCtx.JSON(http.StatusInternalServerError, generateResponse(shortenRequest.OriginalUrl, ""))
+			return
+		}
+
 		shortenKey := codec.Base62Encoder(dbId, salt)
 
 		jResp, err := json.Marshal(models.CacheData{
@@ -66,13 +76,15 @@ func Shorten(db postgres.DbService, redis redis.RedisService) gin.HandlerFunc {
 
 		if err != nil {
 			log.Error("SHORTEN: Error converting response to json", "Error", err)
-			ginCtx.JSON(500, generateResponse(shortenRequest.OriginalUrl, nil))
+			ginCtx.JSON(http.StatusInternalServerError, generateResponse(shortenRequest.OriginalUrl, ""))
 			return
 		}
 
-		redis.SaveUrlMapping(ctx, shortenKey, jResp)
+		if err := redis.SaveUrlMapping(ctx, shortenKey, jResp); err != nil {
+			log.Warn("SHORTEN: Failed to populate cache, continuing", "Error", err)
+		}
 
-		ginCtx.JSON(200, generateResponse(shortenRequest.OriginalUrl, &shortenKey))
+		ginCtx.JSON(http.StatusOK, generateResponse(shortenRequest.OriginalUrl, shortenKey))
 	}
 }
 
@@ -87,20 +99,18 @@ func validateUrl(userUrl string) bool {
 	}
 
 	scheme := u.Scheme
-	if !strings.HasPrefix(scheme, "http") && !strings.HasPrefix(scheme, "https") {
+	if scheme != "http" && scheme != "https" {
 		return false
 	}
 
-	match, err := regexp.MatchString(pattern, u.Host)
-	if err != nil {
-		log.Info("SHORTEN: error with regex url", "Error", err)
+	if u.Host == "" {
 		return false
 	}
 
-	return match
+	return hostPattern.MatchString(u.Host)
 }
 
-func generateResponse(originalUrl string, shortenUrl *string) models.ShortenResponse {
+func generateResponse(originalUrl string, shortenUrl string) models.ShortenResponse {
 	return models.ShortenResponse{
 		OriginalUrl: originalUrl,
 		ShortenUrl:  shortenUrl,

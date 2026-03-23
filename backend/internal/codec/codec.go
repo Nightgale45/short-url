@@ -17,17 +17,23 @@ func Base62Encoder(id int64, salt int64) string {
 
 // return the id and salt
 func Base62Decoder(str string) (id int64, salt int64) {
-
 	result := base62Decoding(str)
+
+	if result == -1 {
+		return -1, 0
+	}
 
 	salt = result & ((1 << 27) - 1)
 	id = result >> 27
 
 	return id, salt
-
 }
 
 func base62Encoding(value int64) string {
+	if value == 0 {
+		return "0"
+	}
+
 	compute := value
 	var encodeStr []byte
 
