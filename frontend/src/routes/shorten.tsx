@@ -24,13 +24,18 @@ function Shorten() {
   };
 
   return (
-    <>
-      <div className="submit-content">
-        <ShortenSubmit onSubmit={handleSubmit} disableSubmit={loading} />
-        {/* Only render ShortenReponse once data is returned */}
-        {result && <ShortenReponse data={result} />}
+    <div className="flex items-start justify-center min-h-screen pt-24">
+      <div className={`flex gap-8 transition-all duration-300 ${result ? "justify-start" : "justify-center"}`}>
+        <div className="w-80">
+          <ShortenSubmit onSubmit={handleSubmit} disableSubmit={loading} />
+        </div>
+        {result && (
+          <div className="w-80">
+            <ShortenReponse data={result} />
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 }
 
