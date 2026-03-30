@@ -3,6 +3,7 @@ package handler
 import (
 	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"math/big"
 	"net/http"
 	"net/url"
@@ -27,7 +28,7 @@ var (
 )
 
 // Receive a url and create a shorten url to return
-func Shorten(db postgres.DbService, redis redis.RedisService) gin.HandlerFunc {
+func Shorten(db postgres.DbService, redis redis.RedisService, baseUrl string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var shortenRequest models.ShortenRequest
 		ctx := ginCtx.Request.Context()
@@ -84,7 +85,8 @@ func Shorten(db postgres.DbService, redis redis.RedisService) gin.HandlerFunc {
 			log.Warn("SHORTEN: Failed to populate cache, continuing", "Error", err)
 		}
 
-		ginCtx.JSON(http.StatusOK, generateResponse(shortenRequest.OriginalUrl, shortenKey))
+		shortenUrl := fmt.Sprintf("%s/api/v1/%s", baseUrl, shortenKey)
+		ginCtx.JSON(http.StatusOK, generateResponse(shortenRequest.OriginalUrl, shortenUrl))
 	}
 }
 

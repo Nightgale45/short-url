@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/Nightgale45/short-url/internal/models"
@@ -23,7 +24,7 @@ func defaultMockData() *models.ShortenRequest {
 func TestUrlValidationWithIncorrectUrl(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	r.POST("/shorten", Shorten(testhelper.DefaultMockDB(), testhelper.DefaultMockRedis()))
+	r.POST("/shorten", Shorten(testhelper.DefaultMockDB(), testhelper.DefaultMockRedis(), "http://localhost"))
 
 	body := &models.ShortenRequest{
 		OriginalUrl: "test",
@@ -44,7 +45,7 @@ func TestUrlValidationWithIncorrectUrl(t *testing.T) {
 func TestShortenWithMalformedJSON(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	r.POST("/shorten", Shorten(testhelper.DefaultMockDB(), testhelper.DefaultMockRedis()))
+	r.POST("/shorten", Shorten(testhelper.DefaultMockDB(), testhelper.DefaultMockRedis(), "http://localhost"))
 
 	req := httptest.NewRequest(http.MethodPost, "/shorten", bytes.NewBufferString(`{invalid json`))
 	w := httptest.NewRecorder()
@@ -60,7 +61,7 @@ func TestShortenWithDBInsertError(t *testing.T) {
 	db := testhelper.DefaultMockDB()
 	db.InsertErr = errors.New("db insert failed")
 
-	r.POST("/shorten", Shorten(db, testhelper.DefaultMockRedis()))
+	r.POST("/shorten", Shorten(db, testhelper.DefaultMockRedis(), "http://localhost"))
 
 	bodyBytes, err := json.Marshal(defaultMockData())
 	if err != nil {
@@ -79,7 +80,7 @@ func TestShortenRedisFailureContinues(t *testing.T) {
 	r := gin.New()
 
 	redis := &testhelper.MockRedisService{SaveErr: errors.New("redis down")}
-	r.POST("/shorten", Shorten(testhelper.DefaultMockDB(), redis))
+	r.POST("/shorten", Shorten(testhelper.DefaultMockDB(), redis, "http://localhost"))
 
 	bodyBytes, err := json.Marshal(defaultMockData())
 	if err != nil {
@@ -96,7 +97,8 @@ func TestShortenRedisFailureContinues(t *testing.T) {
 func TestShortenWithCorrectUrl(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	r.POST("/shorten", Shorten(testhelper.DefaultMockDB(), testhelper.DefaultMockRedis()))
+	baseUrl := "http://localhost"
+	r.POST("/shorten", Shorten(testhelper.DefaultMockDB(), testhelper.DefaultMockRedis(), baseUrl))
 
 	bodyBytes, err := json.Marshal(defaultMockData())
 	if err != nil {
@@ -112,7 +114,7 @@ func TestShortenWithCorrectUrl(t *testing.T) {
 	var response models.ShortenResponse
 	err = json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.NotEmpty(t, response.ShortenUrl)
+	assert.True(t, strings.HasPrefix(response.ShortenUrl, baseUrl+"/api/v1/"))
 	assert.Equal(t, "http://google.com", response.OriginalUrl)
 
 }
