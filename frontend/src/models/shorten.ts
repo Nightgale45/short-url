@@ -5,4 +5,5 @@ export interface ShortenRequest {
 export interface ShortenResponse {
   original_url: string;
   shorten_url: string;
+  error_message?: string;
 }

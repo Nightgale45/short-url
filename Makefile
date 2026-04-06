@@ -1,5 +1,5 @@
-# variable go at top 
-.PHONY: dev down prod backend-test backend-build backend-clean
+# variable go at top
+.PHONY: help dev down prod backend-test backend-build backend-clean
 
 BACKEND_DIR = ./backend/
 
@@ -7,6 +7,18 @@ DOCKER_COMPOSE = docker compose --env-file $(BACKEND_DIR).env
 
 BINARY_NAME=main
 LDFLAGS=-w -s
+
+help:
+	@echo "Usage: make [target]"
+	@echo ""
+	@echo "Targets:"
+	@echo "  dev             Start dev environment (detached)"
+	@echo "  dev-down        Stop dev environment"
+	@echo "  prod            Start prod environment"
+	@echo "  prod-down       Stop prod environment"
+	@echo "  backend-test    Run backend tests"
+	@echo "  backend-build   Build backend binary"
+	@echo "  backend-clean   Remove backend build artifacts"
 
 dev:
 	# $(DOCKER_COMPOSE) --profile dev up --watch --build

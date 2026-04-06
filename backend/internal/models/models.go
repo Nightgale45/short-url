@@ -25,6 +25,7 @@ type ShortenRequest struct {
 }
 
 type ShortenResponse struct {
-	OriginalUrl string `json:"original_url"`
-	ShortenUrl  string `json:"shorten_url"`
+	OriginalUrl  string `json:"original_url"`
+	ShortenUrl   string `json:"shorten_url"`
+	ErrorMessage string `json:"error_message,omitempty"`
 }

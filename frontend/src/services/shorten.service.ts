@@ -11,9 +11,11 @@ export const shorten = async (request: ShortenRequest): Promise<ShortenResponse>
     body: JSON.stringify(request),
   });
 
+  const body = await response.json() as ShortenResponse;
+
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
+    throw new Error(body.error_message ?? `Request failed: ${response.status}`);
   }
 
-  return response.json() as Promise<ShortenResponse>;
+  return body;
 };

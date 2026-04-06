@@ -37,19 +37,19 @@ func Shorten(db postgres.DbService, redis redis.RedisService, baseUrl string) gi
 		err := ginCtx.ShouldBindJSON(&shortenRequest)
 		if err != nil {
 			log.Error("SHORTEN: Error binding json request to struct", "Error", err)
-			ginCtx.JSON(http.StatusBadRequest, generateResponse(shortenRequest.OriginalUrl, ""))
+			ginCtx.JSON(http.StatusBadRequest, generateResponse(shortenRequest.OriginalUrl, "", "Invalid request body"))
 			return
 		}
 
 		if !validateUrl(shortenRequest.OriginalUrl) {
-			ginCtx.JSON(http.StatusBadRequest, generateResponse(shortenRequest.OriginalUrl, ""))
+			ginCtx.JSON(http.StatusBadRequest, generateResponse(shortenRequest.OriginalUrl, "", "Invalid URL format"))
 			return
 		}
 
 		randNum, err := rand.Int(rand.Reader, big.NewInt(90_000_000))
 		if err != nil {
 			log.Error("SHORTEN: Error generating salt number", "Error", err)
-			ginCtx.JSON(http.StatusInternalServerError, generateResponse(shortenRequest.OriginalUrl, ""))
+			ginCtx.JSON(http.StatusInternalServerError, generateResponse(shortenRequest.OriginalUrl, "", "Failed to generate short URL"))
 			return
 		}
 
@@ -64,7 +64,7 @@ func Shorten(db postgres.DbService, redis redis.RedisService, baseUrl string) gi
 		dbId, err := db.InsertUrlData(ctx, urlData)
 		if err != nil {
 			log.Error("SHORTEN: Error inserting url data", "Error", err)
-			ginCtx.JSON(http.StatusInternalServerError, generateResponse(shortenRequest.OriginalUrl, ""))
+			ginCtx.JSON(http.StatusInternalServerError, generateResponse(shortenRequest.OriginalUrl, "", "Failed to save URL"))
 			return
 		}
 
@@ -77,7 +77,7 @@ func Shorten(db postgres.DbService, redis redis.RedisService, baseUrl string) gi
 
 		if err != nil {
 			log.Error("SHORTEN: Error converting response to json", "Error", err)
-			ginCtx.JSON(http.StatusInternalServerError, generateResponse(shortenRequest.OriginalUrl, ""))
+			ginCtx.JSON(http.StatusInternalServerError, generateResponse(shortenRequest.OriginalUrl, "", "Failed to generate short URL"))
 			return
 		}
 
@@ -86,7 +86,7 @@ func Shorten(db postgres.DbService, redis redis.RedisService, baseUrl string) gi
 		}
 
 		shortenUrl := fmt.Sprintf("%s/api/v1/%s", baseUrl, shortenKey)
-		ginCtx.JSON(http.StatusOK, generateResponse(shortenRequest.OriginalUrl, shortenUrl))
+		ginCtx.JSON(http.StatusOK, generateResponse(shortenRequest.OriginalUrl, shortenUrl, ""))
 	}
 }
 
@@ -112,9 +112,10 @@ func validateUrl(userUrl string) bool {
 	return hostPattern.MatchString(u.Host)
 }
 
-func generateResponse(originalUrl string, shortenUrl string) models.ShortenResponse {
+func generateResponse(originalUrl string, shortenUrl string, errorMessage string) models.ShortenResponse {
 	return models.ShortenResponse{
-		OriginalUrl: originalUrl,
-		ShortenUrl:  shortenUrl,
+		OriginalUrl:  originalUrl,
+		ShortenUrl:   shortenUrl,
+		ErrorMessage: errorMessage,
 	}
 }
