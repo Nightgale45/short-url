@@ -3,7 +3,7 @@ import Shorten from "./routes/shorten";
 
 function App() {
   return (
-    <div className="min-h-full px-[10%]">
+    <div className="min-h-full">
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Shorten />} />

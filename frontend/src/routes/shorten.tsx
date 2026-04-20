@@ -26,11 +26,9 @@ function Shorten() {
     setLoading(false);
   };
 
-  const hasResponse = result || error;
-
   return (
-    <div className="flex items-start justify-center min-h-screen pt-24">
-      <div className={`flex items-stretch gap-8 transition-all duration-300 ${hasResponse ? "justify-start" : "justify-center"}`}>
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-stretch gap-8 justify-center transition-all duration-300">
         <div className="w-80">
           <ShortenSubmit onSubmit={handleSubmit} disableSubmit={loading} />
         </div>
